@@ -1,0 +1,233 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  code      String?  @unique
+  name      String
+  email     String   @unique
+  password  String
+  profile   String?
+  role      String   @default("employee")
+  createdAt DateTime @default(now())
+
+  products          Product[]
+  invoices          Invoice[]          @relation("seller_invoices")
+  shares            InvoiceShare[]
+  discounts         SellerDiscount[]
+  payments          Payment[]          @relation("user_created_payments")
+  agreementPayments AgreementPayment[] @relation("user_agreement_payments")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+}
+
+/**
+ * ===========================
+ * CUSTOMER
+ * ===========================
+ */
+
+model Customer {
+  id         Int         @id @default(autoincrement())
+  name       String
+  phone      String?
+  email      String?
+  address    String?
+  createdAt  DateTime    @default(now())
+  invoices   Invoice[]
+  agreements Agreement[]
+}
+
+/**
+ * ===========================
+ * SUPPLIER
+ * ===========================
+ */
+
+model Supplier {
+  id       Int       @id @default(autoincrement())
+  name     String
+  contact  String?
+  phone    String?
+  email    String?
+  products Product[]
+}
+
+/**
+ * ===========================
+ * PRODUCT
+ * ===========================
+ */
+
+model Product {
+  id         Int      @id @default(autoincrement())
+  sku        String?  @unique
+  name       String
+  price      Decimal?
+  cost       Decimal?
+  stock      Int      @default(0)
+  categoryId Int
+  supplierId Int?
+  userId     Int
+  createdAt  DateTime @default(now())
+
+  category Category  @relation(fields: [categoryId], references: [id])
+  supplier Supplier? @relation(fields: [supplierId], references: [id])
+  user     User      @relation(fields: [userId], references: [id])
+
+  items InvoiceItem[]
+}
+
+/**
+ * ===========================
+ * INVOICE
+ * ===========================
+ */
+
+model Invoice {
+  id            Int       @id @default(autoincrement())
+  invoiceNumber Int       @default(0)
+  customerId    Int?
+  sellerId      Int?
+  total         Decimal?  @default("0.00")
+  status        String    @default("issued")
+  createdAt     DateTime  @default(now())
+  dueDate       DateTime?
+  legacy        Boolean   @default(false)
+
+  customer Customer?      @relation(fields: [customerId], references: [id])
+  seller   User?          @relation("seller_invoices", fields: [sellerId], references: [id])
+  items    InvoiceItem[]
+  payments Payment[]
+  shares   InvoiceShare[]
+}
+
+/**
+ * ===========================
+ * INVOICE ITEM
+ * ===========================
+ */
+
+model InvoiceItem {
+  id        Int      @id @default(autoincrement())
+  invoiceId Int
+  productId Int
+  qty       Int
+  price     Decimal?
+  discount  Decimal? @default("0.00")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+/**
+ * ===========================
+ * PAYMENT
+ * ===========================
+ */
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  invoiceId   Int
+  amount      Decimal?
+  method      String
+  createdAt   DateTime @default(now())
+  createdById Int?
+
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  createdBy User?   @relation("user_created_payments", fields: [createdById], references: [id])
+}
+
+/**
+ * ===========================
+ * INVOICE SHARE
+ * ===========================
+ */
+
+model InvoiceShare {
+  id          Int      @id @default(autoincrement())
+  invoiceId   Int
+  userId      Int
+  percentage  Decimal? @default("0.00")
+  fixedAmount Decimal? @default("0.00")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+/**
+ * ===========================
+ * SELLER DISCOUNT
+ * ===========================
+ */
+
+model SellerDiscount {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  description String?
+  amount      Decimal?
+  applied     Boolean  @default(false)
+  appliedOn   Int?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+/**
+ * ===========================
+ * AGREEMENT
+ * ===========================
+ */
+
+model Agreement {
+  id              Int      @id @default(autoincrement())
+  customerId      Int
+  initialAmount   Decimal
+  totalAmount     Decimal
+  remainingAmount Decimal
+  terms           Json?
+  createdAt       DateTime @default(now())
+
+  customer Customer           @relation(fields: [customerId], references: [id])
+  payments AgreementPayment[]
+}
+
+/**
+ * ===========================
+ * AGREEMENT PAYMENT
+ * ===========================
+ */
+
+model AgreementPayment {
+  id          Int      @id @default(autoincrement())
+  agreementId Int
+  amount      Decimal
+  createdAt   DateTime @default(now())
+  createdById Int?
+
+  agreement Agreement @relation(fields: [agreementId], references: [id])
+  createdBy User?     @relation("user_agreement_payments", fields: [createdById], references: [id])
+}
+
+/**
+ * ===========================
+ * MONTHLY CLOSURE
+ * ===========================
+ */
+
+model MonthlyClosure {
+  id          Int      @id @default(autoincrement())
+  period      DateTime
+  generatedAt DateTime @default(now())
+  data        Json
+}
