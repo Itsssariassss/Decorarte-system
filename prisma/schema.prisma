@@ -6,6 +6,8 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
+
 model User {
   id        Int      @id @default(autoincrement())
   code      String?  @unique
@@ -30,12 +32,6 @@ model Category {
   products Product[]
 }
 
-/**
- * ===========================
- * CUSTOMER
- * ===========================
- */
-
 model Customer {
   id         Int         @id @default(autoincrement())
   name       String
@@ -47,12 +43,6 @@ model Customer {
   agreements Agreement[]
 }
 
-/**
- * ===========================
- * SUPPLIER
- * ===========================
- */
-
 model Supplier {
   id       Int       @id @default(autoincrement())
   name     String
@@ -61,12 +51,6 @@ model Supplier {
   email    String?
   products Product[]
 }
-
-/**
- * ===========================
- * PRODUCT
- * ===========================
- */
 
 model Product {
   id         Int      @id @default(autoincrement())
@@ -87,18 +71,19 @@ model Product {
   items InvoiceItem[]
 }
 
-/**
- * ===========================
- * INVOICE
- * ===========================
- */
-
 model Invoice {
   id            Int       @id @default(autoincrement())
   invoiceNumber Int       @default(0)
   customerId    Int?
   sellerId      Int?
   total         Decimal?  @default("0.00")
+
+  itbisEnabled  Boolean   @default(false)
+
+  itbisRate     Decimal   @default("0.18") 
+
+  itbisAmount   Decimal?  @default("0.00")
+
   status        String    @default("issued")
   createdAt     DateTime  @default(now())
   dueDate       DateTime?
@@ -111,12 +96,6 @@ model Invoice {
   shares   InvoiceShare[]
 }
 
-/**
- * ===========================
- * INVOICE ITEM
- * ===========================
- */
-
 model InvoiceItem {
   id        Int      @id @default(autoincrement())
   invoiceId Int
@@ -125,15 +104,11 @@ model InvoiceItem {
   price     Decimal?
   discount  Decimal? @default("0.00")
 
+  itbis     Decimal? @default("0.00")
+
   invoice Invoice @relation(fields: [invoiceId], references: [id])
   product Product @relation(fields: [productId], references: [id])
 }
-
-/**
- * ===========================
- * PAYMENT
- * ===========================
- */
 
 model Payment {
   id          Int      @id @default(autoincrement())
@@ -147,12 +122,6 @@ model Payment {
   createdBy User?   @relation("user_created_payments", fields: [createdById], references: [id])
 }
 
-/**
- * ===========================
- * INVOICE SHARE
- * ===========================
- */
-
 model InvoiceShare {
   id          Int      @id @default(autoincrement())
   invoiceId   Int
@@ -163,12 +132,6 @@ model InvoiceShare {
   invoice Invoice @relation(fields: [invoiceId], references: [id])
   user    User    @relation(fields: [userId], references: [id])
 }
-
-/**
- * ===========================
- * SELLER DISCOUNT
- * ===========================
- */
 
 model SellerDiscount {
   id          Int      @id @default(autoincrement())
@@ -181,12 +144,6 @@ model SellerDiscount {
 
   user User @relation(fields: [userId], references: [id])
 }
-
-/**
- * ===========================
- * AGREEMENT
- * ===========================
- */
 
 model Agreement {
   id              Int      @id @default(autoincrement())
@@ -201,12 +158,6 @@ model Agreement {
   payments AgreementPayment[]
 }
 
-/**
- * ===========================
- * AGREEMENT PAYMENT
- * ===========================
- */
-
 model AgreementPayment {
   id          Int      @id @default(autoincrement())
   agreementId Int
@@ -217,12 +168,6 @@ model AgreementPayment {
   agreement Agreement @relation(fields: [agreementId], references: [id])
   createdBy User?     @relation("user_agreement_payments", fields: [createdById], references: [id])
 }
-
-/**
- * ===========================
- * MONTHLY CLOSURE
- * ===========================
- */
 
 model MonthlyClosure {
   id          Int      @id @default(autoincrement())

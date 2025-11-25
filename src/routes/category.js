@@ -12,9 +12,8 @@ const router = Router();
 router.post("/", (req, res, next) => {
   console.log("BODY RECIBIDO:", req.body);
   next();
-});
+}, createCategory);
 
-router.post("/", createCategory);
 router.get("/", getCategories);
 router.get("/:id", getCategory);
 router.put("/:id", updateCategory);

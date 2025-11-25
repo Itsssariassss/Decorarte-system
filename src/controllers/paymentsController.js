@@ -13,7 +13,6 @@ export async function createPayment(req, res){
     }
   });
 
-  // actualizar status invoice
   const agg = await prisma.payment.aggregate({ where: { invoiceId }, _sum: { amount: true }});
   const totalPaid = Number(agg._sum.amount || 0);
 

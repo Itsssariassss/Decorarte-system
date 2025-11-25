@@ -1,0 +1,16 @@
+<div style="font-family: Arial; padding: 20px;">
+  <h1>Factura #{{id}}</h1>
+
+  <p><b>Cliente:</b> {{customer.name}}</p>
+  <p><b>Fecha:</b> {{createdAt}}</p>
+  <p><b>Total:</b> RD$ {{total}}</p>
+
+  <h3>Artículos</h3>
+  <ul>
+    {{#each items}}
+      <li>{{qty}} x {{product.name}} - RD$ {{price}}</li>
+    {{/each}}
+  </ul>
+
+  <p>Gracias por comprar en Decorarte</p>
+</div>
